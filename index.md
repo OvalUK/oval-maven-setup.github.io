@@ -1,37 +1,161 @@
-## Welcome to GitHub Pages
+# Creating a private Maven repository #
 
-You can use the [editor on GitHub](https://github.com/OvalUK/oval-maven-setup.github.io/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Sign in to the company GitHub account, create a new private repository for the package. It is not possible to create a maven package without a git repository.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+![new repo](https://s3.eu-west-1.amazonaws.com/ovalgeneric/public/assets/maven-guide/create-repo.png)
 
-### Markdown
+This will create your repository, you can push your package as usual
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+![repo](https://s3.eu-west-1.amazonaws.com/ovalgeneric/public/assets/maven-guide/new-repo.png)
 
-```markdown
-Syntax highlighted code block
+Take a note of the repository url, this will be required later when setting up you local authorisation.
 
-# Header 1
-## Header 2
-### Header 3
+---
 
-- Bulleted
-- List
+## If you do not have an existing API key for your github account then you will need to create one ##
 
-1. Numbered
-2. List
+First go to settings > Developer settings
 
-**Bold** and _Italic_ and `Code` text
+![repo](https://s3.eu-west-1.amazonaws.com/ovalgeneric/public/assets/maven-guide/api-gen-1.png)
 
-[Link](url) and ![Image](src)
+Then Personal access tokens > Generate new token
+
+![repo](https://s3.eu-west-1.amazonaws.com/ovalgeneric/public/assets/maven-guide/api-gen-2.png)
+
+Click ```write:packages``` which will provide the necessary default privileges, add a Note as a reminder of what the token is being used for.
+
+![repo](https://s3.eu-west-1.amazonaws.com/ovalgeneric/public/assets/maven-guide/api-gen-3.png)
+
+After the token generates copy it for use later.
+
+---
+
+## Setting up Maven locally ##
+
+In your home directory there should be a ```.m2``` directory. In here is there is a ```settings.xml``` open it otherwise create it. This is where you will keep the configuration setting for github access.
+
+The file needs a _profiles_ section for each repository you want to pull packages from. here we add both the maven.org repository and our new github repository, note the url contains the repository url we saved previously with the added subdomain of __maven.pkg__ and suffix __.git__
+
+Then we add a _servers_ section where we add the authentication for our private repository, the password property is where we paste your GitHub API key.
+
+```XML
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <activeProfiles>
+    <activeProfile>github</activeProfile>
+  </activeProfiles>
+
+  <profiles>
+    <profile>
+      <id>github</id>
+      <repositories>
+        <repository>
+          <id>central</id>
+          <url>https://repo1.maven.org/maven2</url>
+          <releases><enabled>true</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>github</id>
+          <name>OvalUK</name>
+          <url>https://maven.pkg.github.com/ovaluk/maven-test.git</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
+  <servers>
+    <server>
+      <id>github</id>
+      <username>alexwhiteoval</username>
+      <password>--- YOUR TOKEN GOES HERE ---</password>
+    </server>
+  </servers>
+</settings>
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+Now that this is setup your private repository is now available to all your local maven projects. You can create new packages and import those into apps without the need to input your API again.
 
-### Jekyll Themes
+---
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/OvalUK/oval-maven-setup.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+## Setting up a package to push to your github repository ##
 
-### Support or Contact
+Now we can edit the package ```pom.xml``` so this when you deploy it will know where to put the package.
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+```XML
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.uk.ovalbusinesssolutions</groupId>
+    <artifactId>maven-test</artifactId>
+    <version>1.0-SNAPSHOT</version>
+   
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>OvalUK</name>
+            <url>https://maven.pkg.github.com/OvalUK/maven-test</url>
+        </repository>
+    </distributionManagement>
+
+</project>
+```
+
+Here we have added a _distributionManagement_ property where we list our github repository, most of this data is the same the ```settings.xml``` except the _url_ which does not include the __.git__ suffix.
+
+with all this setup we can ```git push ...```our repository and ```mvn deploy``` to publish the package to our private repository.
+
+---
+
+## Pulling the package into a project ##
+
+To pull a package into a new or existing project you ```pom.xml```will need a _repositories_ property with each github repository you need to use and then the usual _dependency_ property
+
+```XML
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.uk.ovalbusinesssolutions</groupId>
+    <artifactId>maven-echo-testing</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/OvalUK/maven-test</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.uk.ovalbusinesssolutions</groupId>
+            <artifactId>maven-test</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+</project>
+```
