@@ -1,4 +1,4 @@
-# Creating a private Maven repository #
+# Creating a private Maven repository
 
 Sign in to your company based GitHub account, create a new private repository for the package. It is not possible to create a maven package without a git repository.
 
@@ -12,7 +12,7 @@ Take a note of the repository url, this will be required later when setting up y
 
 ---
 
-## If you do not have an existing API key for your github account then you will need to create one ##
+## If you do not have an existing API key for your github account then you will need to create one
 
 First go to settings > Developer settings
 
@@ -30,7 +30,7 @@ After the token generates copy it for use later.
 
 ---
 
-## Setting up Maven locally ##
+## Setting up Maven locally
 
 In your home directory there should be a ```.m2``` directory. In here is there is a ```settings.xml``` open it otherwise create it. This is where you will keep the configuration setting for github access.
 
@@ -81,7 +81,7 @@ Now that this is setup your private repository is now available to all your loca
 
 ---
 
-## Setting up a package to push to your github repository ##
+## Setting up a package to push to your github repository
 
 Now we can edit the package ```pom.xml``` so this when you deploy it will know where to put the package.
 
@@ -118,7 +118,7 @@ with all this setup we can ```git push ...```our repository and ```mvn deploy```
 
 ---
 
-## Pulling the package into a project ##
+## Pulling the package into a project
 
 To pull a package into a new or existing project you ```pom.xml```will need a _repositories_ property with each github repository you need to use and then the usual _dependency_ property
 
