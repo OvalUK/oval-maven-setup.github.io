@@ -167,7 +167,7 @@ This above action will build the package using the ubuntu-20.04 operating system
 </dependency>
 ```
 
-The deploy phase takes the built package and deploys it to our provate maven repository using the deploy command.
+The deploy phase takes the built package and deploys it to our private maven repository using the deploy command.
 
 ---
 
