@@ -116,6 +116,59 @@ Here we have added a _distributionManagement_ property where we list our github 
 
 with all this setup we can ```git push ...```our repository and ```mvn deploy``` to publish the package to our private repository.
 
+### Automatic deployments with GitHub ###
+
+If you using GitHub actions to complete the build and deployment process, the source repository needs to have a actions yaml file, name the file appropriately in the following location ```./.github/workflows/MY_ACTION.yml``` The contents should be as follows:
+
+```YAML
+name: Maven package deployment
+
+on:
+  push:
+    tags:
+      - "*"
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    name: Build and Deploy
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build with Maven
+      run: |
+        arrTag=(${GITHUB_REF//\// })
+        VERSION="${arrTag[2]}"
+        VERSION="${VERSION//v}"
+        mvn --batch-mode release:update-versions -DdevelopmentVersion=$VERSION
+        mvn -B package --file pom.xml
+    - name: Deploy package
+      env:
+        GITHUB_USER: ${{ github.actor }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "<settings><servers><server><id>github</id><username>${GITHUB_USER}</username><password>${GITHUB_TOKEN}</password></server></servers></settings>" > ~/.m2/settings.xml
+        mvn deploy
+```
+
+This above action will build the package using the ubuntu-20.04 operating system with Java 1.8 installed. during the build phase the version number will be updated using the tag value. Git tags should be in the format _v#.#_ or _v#.#-SNAPSHOT_ this will result in a dependency similar to:
+
+```XML
+<dependency>
+  <groupId>com.uk.ovalbusinesssolutions</groupId>
+  <artifactId>maven-test</artifactId>
+  <version>0.4-SNAPSHOT</version>
+</dependency>
+```
+
+The deploy phase takes the built package and deploys it to our provate maven repository using the deploy command.
+
 ---
 
 ## Pulling the package into a project ##
