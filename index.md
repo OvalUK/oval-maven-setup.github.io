@@ -116,7 +116,7 @@ Here we have added a _distributionManagement_ property where we list our github 
 
 with all this setup we can ```git push ...```our repository and ```mvn deploy``` to publish the package to our private repository.
 
-### Automatic deployments with GitHub ###
+### Automatic deployments with GitHub
 
 If you using GitHub actions to complete the build and deployment process, the source repository needs to have a actions yaml file, name the file appropriately in the following location ```./.github/workflows/MY_ACTION.yml``` The contents should be as follows:
 
