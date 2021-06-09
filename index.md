@@ -150,8 +150,8 @@ jobs:
         mvn -B package --file pom.xml
     - name: Deploy package
       env:
-        GITHUB_USER: ${{ github.actor }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_USER: ${{ "{{ github.actor " }}}}
+        GITHUB_TOKEN: ${{ "{{ secrets.GITHUB_TOKEN " }}}}
       run: |
         echo "<settings><servers><server><id>github</id><username>${GITHUB_USER}</username><password>${GITHUB_TOKEN}</password></server></servers></settings>" > ~/.m2/settings.xml
         mvn deploy
